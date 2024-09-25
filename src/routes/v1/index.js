@@ -7,6 +7,7 @@ const Middlewares = require("../../middlewares");
 const {
   LoginController,
   PlaylistGeneratorController,
+  SavePlaylistController,
 } = require("../../controllers");
 
 const router = express.Router();
@@ -17,6 +18,12 @@ router.post(
   "/playlist/generate",
   Middlewares.AuthorizationMiddleware,
   PlaylistGeneratorController.generatePlaylist
+);
+
+router.post(
+  "/playlist/save",
+  Middlewares.AuthorizationMiddleware,
+  SavePlaylistController.savePlaylist
 );
 
 module.exports = router;

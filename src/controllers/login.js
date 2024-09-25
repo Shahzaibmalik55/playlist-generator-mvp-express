@@ -1,6 +1,10 @@
 const { StatusCodes } = require("http-status-codes");
 const { ServerConfig } = require("../config");
-const { accountsSpotifyBaseUrl, encodeQueryData } = require("../utils");
+const {
+  accountsSpotifyBaseUrl,
+  encodeQueryData,
+  spotifyApiBaseUrl,
+} = require("../utils");
 
 const login = async (req, res) => {
   if (!ServerConfig.SPOTIFY_CLIENT_ID) {
@@ -10,7 +14,8 @@ const login = async (req, res) => {
   }
   const redirect_uri = ServerConfig.CLIENT_APP_URL_CALLBACK_URL;
   const codeState = new Date().getTime().toString();
-  const scope = "user-read-private user-read-email";
+  const scope =
+    "user-read-private user-read-email playlist-modify-private playlist-modify-public playlist-modify";
   var code = req.query.code || null;
   var state = req.query.state || null;
 
@@ -27,6 +32,7 @@ const login = async (req, res) => {
     formData.append("redirect_uri", redirect_uri);
     formData.append("grant_type", "authorization_code");
     try {
+      // Fetching users access_token and refresh_token
       const response = await fetch(`${accountsSpotifyBaseUrl}/api/token`, {
         headers: {
           "content-type": "application/x-www-form-urlencoded",
@@ -42,7 +48,15 @@ const login = async (req, res) => {
         body: formData,
       });
       const data = await response.json();
-      return res.status(StatusCodes.OK).send({ data });
+
+      // Fetching user profile info
+      const accountResponse = await fetch(`${spotifyApiBaseUrl}/v1/me`, {
+        headers: {
+          Authorization: `Bearer ${data.access_token}`,
+        },
+      });
+      const userProfile = await accountResponse.json();
+      return res.status(StatusCodes.OK).send({ ...data, ...userProfile });
     } catch (err) {
       console.log("err", err);
       return res.status(StatusCodes.BAD_REQUEST).send({ err });
@@ -58,9 +72,7 @@ const login = async (req, res) => {
   });
   const redirectUrl = `${accountsSpotifyBaseUrl}/authorize?${query}`;
   return res.status(StatusCodes.OK).send({
-    data: {
-      redirectUrl,
-    },
+    redirectUrl,
   });
 };
 module.exports = {
