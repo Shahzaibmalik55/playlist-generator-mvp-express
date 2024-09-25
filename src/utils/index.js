@@ -1,4 +1,5 @@
 const accountsSpotifyBaseUrl = "https://accounts.spotify.com";
+const spotifyApiBaseUrl = "https://api.spotify.com";
 
 const encodeQueryData = (data) => {
   const ret = [];
@@ -9,5 +10,6 @@ const encodeQueryData = (data) => {
 
 module.exports = {
   accountsSpotifyBaseUrl,
+  spotifyApiBaseUrl,
   encodeQueryData,
 };
