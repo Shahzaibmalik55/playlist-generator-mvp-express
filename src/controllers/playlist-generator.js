@@ -16,14 +16,14 @@ const generatePlaylist = async (req, res) => {
       messages: [
         {
           role: "user",
-          content: `Create a ${mood} playlist, please return only list of of seed OR genres with comma separated, please make sure to seed/genres which are map to spotify also list should be lowercase and only one word, limit to 5`,
+          content: `Suggest a way to generate perfectly create a playlists using OpenAI api and Spotify api based on mood and situations - for example - ${mood}, please return ONLY list of genres as an comma separated values, please make sure to seed/genres which are map to spotify also list should be lowercase and only one word, limiting to 5`,
         },
       ],
       max_tokens: 50,
     });
-    const seedGenres = completion.choices[0].message.content;
+    const aiResponse = completion.choices[0].message.content;
     const query = encodeQueryData({
-      seed_genres: seedGenres,
+      seed_genres: aiResponse,
     });
     const response = await fetch(
       `${spotifyApiBaseUrl}/v1/recommendations?${query}`,
