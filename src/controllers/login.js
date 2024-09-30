@@ -15,7 +15,7 @@ const login = async (req, res) => {
   const redirect_uri = ServerConfig.CLIENT_APP_URL_CALLBACK_URL;
   const codeState = new Date().getTime().toString();
   const scope =
-    "user-read-private user-read-email playlist-modify-private playlist-modify-public playlist-modify";
+    "user-read-private user-read-email playlist-modify-private playlist-modify-public playlist-modify user-top-read";
   var code = req.query.code || null;
   var state = req.query.state || null;
 

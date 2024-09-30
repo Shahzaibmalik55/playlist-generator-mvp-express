@@ -3,14 +3,31 @@ const { StatusCodes } = require("http-status-codes");
 const { spotifyApiBaseUrl, encodeQueryData } = require("../utils");
 
 const generatePlaylist = async (req, res) => {
-  const mood = req.body.mood;
-  const openai = new OpenAI();
-  if (!mood) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .send({ message: "Text is required" });
-  }
   try {
+    // getting artists top tracks
+    if (req.body.artist) {
+      const response = await fetch(
+        `${spotifyApiBaseUrl}/v1/artists/${req.body.artist}/top-tracks`,
+        {
+          headers: {
+            Authorization: `Bearer ${req.headers.authorization}`,
+          },
+        }
+      );
+      const tracks = await response.json();
+      if (!response.ok) {
+        throw new Error(tracks.error.message);
+      }
+      return res.status(StatusCodes.OK).send({ data: tracks });
+    }
+    // getting tracks from mood
+    const mood = req.body.mood;
+    const openai = new OpenAI();
+    if (!mood) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .send({ message: "Text is required" });
+    }
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
