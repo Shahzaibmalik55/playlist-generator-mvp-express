@@ -1,6 +1,10 @@
 const { OpenAI } = require("openai");
 const { StatusCodes } = require("http-status-codes");
-const { spotifyApiBaseUrl, encodeQueryData } = require("../utils");
+const {
+  spotifyApiBaseUrl,
+  encodeQueryData,
+  jsonFromString,
+} = require("../utils");
 
 const generatePlaylist = async (req, res) => {
   try {
@@ -33,23 +37,24 @@ const generatePlaylist = async (req, res) => {
       messages: [
         {
           role: "user",
-          content: `Suggest a way to generate perfectly create a playlists using OpenAI api and Spotify api based on mood and situations - for example - ${mood}, please return ONLY list of genres as an comma separated values, please make sure to seed/genres which are map to spotify also list should be lowercase and only one word, limiting to 5`,
+          content: `Suggest a way to generate perfectly search for the tracks using OpenAI api for '/search' API of spotify based on this query '${mood}', 
+          please return search params which should be match for the spotify search API,
+          only return the year, type (which can be array of string), q, limit should be 20 AND genre, kept the genre format exactly like required in /search API of spotify, 
+          the q (query parameter) should perfectly represent the mood and format for Spotify '/search' API,
+          with help of those parameters I can fetch the exact tracks for playlist, please just return the json for parameters, 
+          don't add any text in the results`,
         },
       ],
-      max_tokens: 50,
+      max_tokens: 200,
     });
-    const aiResponse = completion.choices[0].message.content;
-    const query = encodeQueryData({
-      seed_genres: aiResponse,
+    const content = completion.choices[0].message.content;
+    const json = jsonFromString(content);
+    const query = encodeQueryData({ ...json });
+    const response = await fetch(`${spotifyApiBaseUrl}/v1/search?${query}`, {
+      headers: {
+        Authorization: `Bearer ${req.headers.authorization}`,
+      },
     });
-    const response = await fetch(
-      `${spotifyApiBaseUrl}/v1/recommendations?${query}`,
-      {
-        headers: {
-          Authorization: `Bearer ${req.headers.authorization}`,
-        },
-      }
-    );
     const recommendations = await response.json();
     if (!response.ok) {
       throw new Error(recommendations.error.message);
